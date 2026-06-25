@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Efficacy Meter · Acceptance Tests (PRD §12)</title>
+  <style>
+    body { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background:#F4EEE4; color:#2A2E20; margin:0; padding:2rem clamp(1rem,4vw,3rem); }
+    h1 { font-family: Georgia, serif; color:#4F5638; }
+    .summary { font-size:1.1rem; font-weight:700; padding:.8rem 1rem; border-radius:10px; margin:1rem 0; }
+    .ok { background:#dff0df; color:#2e5a2e; } .bad { background:#f6dada; color:#8a2a2a; }
+    .row { padding:.35rem .6rem; border-bottom:1px solid rgba(79,86,56,.12); display:flex; gap:.6rem; }
+    .pass::before { content:"PASS"; color:#3a7a3a; font-weight:700; }
+    .fail::before { content:"FAIL"; color:#b23; font-weight:700; }
+    .tag { width:3.2rem; flex:none; }
+    .detail { color:#8A9070; }
+  </style>
+</head>
+<body>
+  <h1>Gemstone Efficacy Meter — Acceptance Tests</h1>
+  <p>Verifies the pure scoring engine against PRD §12. Serve the folder and open this page.</p>
+  <div id="summary" class="summary">Running…</div>
+  <div id="out"></div>
+
+  <script type="module">
+    import { SCORING, STONES, QUESTIONS } from './src/config.js';
+    import { score, buildGaps, recommendCta, metalPoints, fingerPoints, verdictFor } from './src/scoring.js';
+
+    const out = document.getElementById('out');
+    let passes = 0, failures = 0;
+    const row = (ok, name, detail) => {
+      ok ? passes++ : failures++;
+      const d = document.createElement('div');
+      d.className = 'row';
+      d.innerHTML = `<span class="tag ${ok ? 'pass' : 'fail'}"></span><span>${name}</span>${detail !== undefined ? `<span class="detail">${detail}</span>` : ''}`;
+      out.appendChild(d);
+    };
+    const eq = (n, g, w) => row(g === w, n, `= ${g}` + (g === w ? '' : ` (want ${w})`));
+    const ok = (n, c, d) => row(!!c, n, d);
+
+    const perfect = {
+      origin:{optionId:'premium',points:25}, treatment:{optionId:'untreated',points:20},
+      carat:{optionId:'6plus',points:15}, certification:{optionId:'intl',points:5},
+      light_transmission:{optionId:'clear',points:20}, luster:{optionId:'bright',points:15},
+      metal:{optionId:'gold'}, finger:{optionId:'index'}, energising:{optionId:'proper',points:7}
+    };
+    const rp = score('yellow_sapphire', perfect);
+    eq('AC3 perfect = 100%', rp.efficacyPercent, 100);
+    eq('AC3 quality 100%', rp.pillarPercent.quality, 100);
+    eq('AC3 light 100%', rp.pillarPercent.light, 100);
+    eq('AC3 compliance 100%', rp.pillarPercent.compliance, 100);
+
+    const cp = (stone) => { const s = STONES[stone]; const a = JSON.parse(JSON.stringify(perfect)); a.metal={optionId:s.correctMetals[0]}; a.finger={optionId:s.correctFinger}; return score(stone,a).pillarPercent.compliance; };
+    eq('AC2 YellowSapphire gold+index', cp('yellow_sapphire'), 100);
+    eq('AC2 BlueSapphire silver+middle', cp('blue_sapphire'), 100);
+    eq('AC2 Ruby gold+ring', cp('ruby'), 100);
+    eq('AC2 Emerald gold+little', cp('emerald'), 100);
+    ok('AC2 BlueSapphire gold = 0', metalPoints('blue_sapphire','gold') === 0);
+    ok('AC2 BlueSapphire panchdhatu = 8', metalPoints('blue_sapphire','panchdhatu') === 8);
+    ok('AC2 metal Don\'t know = 3', metalPoints('ruby','dontknow') === 3);
+    ok('AC2 finger Don\'t know = 0', fingerPoints('ruby','dontknow') === 0);
+
+    const typical = { origin:{optionId:'synthetic',points:0}, treatment:{optionId:'heated',points:6}, carat:{optionId:'under2',points:0}, certification:{optionId:'none',points:0}, light_transmission:{optionId:'opaque',points:0}, luster:{optionId:'dull',points:3}, metal:{optionId:'gold'}, finger:{optionId:'index'}, energising:{optionId:'proper',points:7} };
+    const rt = score('yellow_sapphire', typical);
+    ok('AC4 typical treated+opaque + perfect compliance < 30%', rt.efficacyPercent < 30, `${rt.efficacyPercent}%`);
+
+    const compOnly = { origin:{optionId:'synthetic',points:0}, treatment:{optionId:'fracture',points:0}, carat:{optionId:'under2',points:0}, certification:{optionId:'none',points:0}, light_transmission:{optionId:'opaque',points:0}, luster:{optionId:'scratched',points:0}, metal:{optionId:'gold'}, finger:{optionId:'index'}, energising:{optionId:'proper',points:7} };
+    eq('AC4 compliance-only = 17% (< 30%)', score('yellow_sapphire', compOnly).efficacyPercent, 17);
+
+    eq('AC5 @100', verdictFor(100).label, 'Highly effective');
+    eq('AC5 @80', verdictFor(80).label, 'Highly effective');
+    eq('AC5 @79', verdictFor(79).label, 'Partially effective');
+    eq('AC5 @55', verdictFor(55).label, 'Partially effective');
+    eq('AC5 @54', verdictFor(54).label, 'Weakly effective');
+    eq('AC5 @30', verdictFor(30).label, 'Weakly effective');
+    eq('AC5 @29', verdictFor(29).label, 'Not effective');
+    eq('AC5 @0', verdictFor(0).label, 'Not effective');
+
+    eq('pillar maxes sum 120', SCORING.PILLAR_MAX.quality + SCORING.PILLAR_MAX.light + SCORING.PILLAR_MAX.compliance, 120);
+
+    const gaps = buildGaps('yellow_sapphire', typical, QUESTIONS);
+    ok('AC6 gaps produced for flawed stone', gaps.length >= 5, `${gaps.length} gaps`);
+    ok('AC6 gaps sorted biggest-loss first', gaps[0].lost >= gaps[gaps.length-1].lost);
+    eq('AC6 no gaps on perfect stone', buildGaps('yellow_sapphire', perfect, QUESTIONS).length, 0);
+    ok('AC6 CTA chosen for weakest pillar', !!recommendCta(rt, typical).cta, recommendCta(rt, typical).title);
+
+    const s = document.getElementById('summary');
+    s.className = 'summary ' + (failures === 0 ? 'ok' : 'bad');
+    s.textContent = `${passes} passed, ${failures} failed`;
+  </script>
+</body>
+</html>

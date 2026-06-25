@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none" stroke="#4F5638" stroke-width="1">
+  <circle cx="200" cy="200" r="196"/>
+  <circle cx="200" cy="200" r="168"/>
+  <circle cx="200" cy="200" r="120"/>
+  <circle cx="200" cy="200" r="70"/>
+  <!-- 12 compass spokes -->
+  <g>
+    <line x1="200" y1="4" x2="200" y2="396"/>
+    <line x1="4" y1="200" x2="396" y2="200"/>
+    <line x1="61" y1="61" x2="339" y2="339"/>
+    <line x1="339" y1="61" x2="61" y2="339"/>
+    <line x1="200" y1="32" x2="200" y2="32"/>
+  </g>
+  <!-- rotated squares (yantra) -->
+  <rect x="80" y="80" width="240" height="240"/>
+  <rect x="80" y="80" width="240" height="240" transform="rotate(45 200 200)"/>
+  <!-- inner upward + downward triangles -->
+  <polygon points="200,90 295,255 105,255"/>
+  <polygon points="200,310 105,145 295,145"/>
+  <!-- petals -->
+  <g>
+    <circle cx="200" cy="80" r="26"/>
+    <circle cx="200" cy="320" r="26"/>
+    <circle cx="80" cy="200" r="26"/>
+    <circle cx="320" cy="200" r="26"/>
+    <circle cx="115" cy="115" r="26"/>
+    <circle cx="285" cy="115" r="26"/>
+    <circle cx="115" cy="285" r="26"/>
+    <circle cx="285" cy="285" r="26"/>
+  </g>
+</svg>
