@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="AstroLaabh">
+  <defs>
+    <linearGradient id="frame" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F2E3A8"/><stop offset="45%" stop-color="#CDA94E"/><stop offset="100%" stop-color="#8C6A2C"/>
+    </linearGradient>
+    <linearGradient id="bevel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#B98F3C"/><stop offset="100%" stop-color="#E7CB78"/>
+    </linearGradient>
+  </defs>
+  <!-- beveled gold frame -->
+  <polygon points="35.64,2.00 84.36,2.00 118.00,35.64 118.00,84.36 84.36,118.00 35.64,118.00 2.00,84.36 2.00,35.64" fill="url(#frame)"/>
+  <polygon points="38.16,8.00 81.84,8.00 112.00,38.16 112.00,81.84 81.84,112.00 38.16,112.00 8.00,81.84 8.00,38.16" fill="url(#bevel)"/>
+  <polygon points="39.00,10.00 81.00,10.00 110.00,39.00 110.00,81.00 81.00,110.00 39.00,110.00 10.00,81.00 10.00,39.00" fill="#C9A84C"/>
+  <!-- faceted field -->
+  <g><polygon points="60.00,60.00 39.00,10.00 60.00,10.00" fill="#e4d4a4"/><polygon points="60.00,60.00 60.00,10.00 81.00,10.00" fill="#c9b57c"/><polygon points="60.00,60.00 81.00,10.00 95.50,24.50" fill="#e0cf9f"/><polygon points="60.00,60.00 95.50,24.50 110.00,39.00" fill="#bea76e"/><polygon points="60.00,60.00 110.00,39.00 110.00,60.00" fill="#cfbc8b"/><polygon points="60.00,60.00 110.00,60.00 110.00,81.00" fill="#a98f55"/><polygon points="60.00,60.00 110.00,81.00 95.50,95.50" fill="#bba472"/><polygon points="60.00,60.00 95.50,95.50 81.00,110.00" fill="#997b41"/><polygon points="60.00,60.00 81.00,110.00 60.00,110.00" fill="#af9664"/><polygon points="60.00,60.00 60.00,110.00 39.00,110.00" fill="#95773c"/><polygon points="60.00,60.00 39.00,110.00 24.50,95.50" fill="#b49b69"/><polygon points="60.00,60.00 24.50,95.50 10.00,81.00" fill="#a0844a"/><polygon points="60.00,60.00 10.00,81.00 10.00,60.00" fill="#c4af7d"/><polygon points="60.00,60.00 10.00,60.00 10.00,39.00" fill="#b59c63"/><polygon points="60.00,60.00 10.00,39.00 24.50,24.50" fill="#d8c696"/><polygon points="60.00,60.00 24.50,24.50 39.00,10.00" fill="#c5b077"/></g>
+  <g><line x1="60" y1="60" x2="39.00" y2="10.00" stroke="#7d5f28" stroke-opacity=".45" stroke-width=".7"/><line x1="60" y1="60" x2="60.00" y2="10.00" stroke="#7d5f28" stroke-opacity=".45" stroke-width=".7"/><line x1="60" y1="60" x2="81.00" y2="10.00" stroke="#7d5f28" stroke-opacity=".45" stroke-width=".7"/><line x1="60" y1="60" x2="95.50" y2="24.50" stroke="#7d5f28" stroke-opacity=".45" stroke-width=".7"/><line x1="60" y1="60" x2="110.00" y2="39.00" stroke="#7d5f28" stroke-opacity=".45" stroke-width=".7"/><line x1="60" y1="60" x2="110.00" y2="60.00" stroke="#7d5f28" stroke-opacity=".45" stroke-width=".7"/><line x1="60" y1="60" x2="110.00" y2="81.00" stroke="#7d5f28" stroke-opacity=".45" stroke-width=".7"/><line x1="60" y1="60" x2="95.50" y2="95.50" stroke="#7d5f28" stroke-opacity=".45" stroke-width=".7"/><line x1="60" y1="60" x2="81.00" y2="110.00" stroke="#7d5f28" stroke-opacity=".45" stroke-width=".7"/><line x1="60" y1="60" x2="60.00" y2="110.00" stroke="#7d5f28" stroke-opacity=".45" stroke-width=".7"/><line x1="60" y1="60" x2="39.00" y2="110.00" stroke="#7d5f28" stroke-opacity=".45" stroke-width=".7"/><line x1="60" y1="60" x2="24.50" y2="95.50" stroke="#7d5f28" stroke-opacity=".45" stroke-width=".7"/><line x1="60" y1="60" x2="10.00" y2="81.00" stroke="#7d5f28" stroke-opacity=".45" stroke-width=".7"/><line x1="60" y1="60" x2="10.00" y2="60.00" stroke="#7d5f28" stroke-opacity=".45" stroke-width=".7"/><line x1="60" y1="60" x2="10.00" y2="39.00" stroke="#7d5f28" stroke-opacity=".45" stroke-width=".7"/><line x1="60" y1="60" x2="24.50" y2="24.50" stroke="#7d5f28" stroke-opacity=".45" stroke-width=".7"/></g>
+  <polygon points="39.00,10.00 81.00,10.00 110.00,39.00 110.00,81.00 81.00,110.00 39.00,110.00 10.00,81.00 10.00,39.00" fill="none" stroke="#7d5f28" stroke-opacity=".5" stroke-width="1"/>
+  <polygon points="35.64,2.00 84.36,2.00 118.00,35.64 118.00,84.36 84.36,118.00 35.64,118.00 2.00,84.36 2.00,35.64" fill="none" stroke="#7a5c27" stroke-width="1.2"/>
+  <!-- central A monogram, inlaid -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <g stroke="#7a5c27" stroke-width="12" stroke-opacity=".55">
+      <path d="M60 32 L44 90 M60 32 L76 90 M48 70 H72"/>
+    </g>
+    <g stroke="#F4EEE4" stroke-width="7.5">
+      <path d="M60 32 L44 90 M60 32 L76 90 M48 70 H72"/>
+    </g>
+  </g>
+</svg>

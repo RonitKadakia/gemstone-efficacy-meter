@@ -108,8 +108,8 @@ export function buildGaps(stoneId, answers, questions) {
     if (mPts < METAL_MAX) {
       const correct = stone.correctMetals.map(metalLabel).join(' or ');
       const text = answers.metal.optionId === 'dontknow'
-        ? `You’re not sure which metal the stone is set in — ${stone.planet}’s stone needs ${correct} to keep the energetic circuit intact.`
-        : `Your stone is set in the wrong metal — ${stone.planet}’s stone should be set in ${correct}, and the wrong metal breaks the energetic circuit.`;
+        ? `You’re not sure which metal the stone is set in - ${stone.planet}’s stone needs ${correct} to keep the energetic circuit intact.`
+        : `Your stone is set in the wrong metal - ${stone.planet}’s stone should be set in ${correct}, and the wrong metal breaks the energetic circuit.`;
       gaps.push({ factorKey: 'metal', factorName: FACTOR_NAMES.metal, text, lost: METAL_MAX - mPts });
     }
   }
@@ -119,8 +119,8 @@ export function buildGaps(stoneId, answers, questions) {
     if (fPts < FINGER_MAX) {
       const correct = fingerLabel(stone.correctFinger);
       const text = answers.finger.optionId === 'dontknow'
-        ? `You’re not sure which finger it’s worn on — ${stone.planet}’s stone belongs on the ${correct}.`
-        : `Your stone is worn on the wrong finger — ${stone.planet}’s stone belongs on the ${correct}. The wrong finger misdirects the energy rather than nullifying it.`;
+        ? `You’re not sure which finger it’s worn on - ${stone.planet}’s stone belongs on the ${correct}.`
+        : `Your stone is worn on the wrong finger - ${stone.planet}’s stone belongs on the ${correct}. The wrong finger misdirects the energy rather than nullifying it.`;
       gaps.push({ factorKey: 'finger', factorName: FACTOR_NAMES.finger, text, lost: FINGER_MAX - fPts });
     }
   }

@@ -5,8 +5,8 @@
    ========================================================================= */
 
 import { QUESTIONS, TOTAL_STEPS, questionByStep, STONES, SCORING } from './config.js';
-import { score, buildGaps, recommendCta, metalPoints, fingerPoints } from './scoring.js';
-import { optionVisual, gemMark } from './illustrations.js';
+import { score, buildGaps, metalPoints, fingerPoints } from './scoring.js';
+import { optionVisual } from './illustrations.js';
 import { track, markStep, markComplete, saveState, loadState, clearState } from './analytics.js';
 
 const root = document.getElementById('app');
@@ -35,6 +35,8 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 
 /* ============================================================ RENDER root */
 function render() {
+  // lock the viewport (no page scroll) only on the quiz steps; landing & result scroll
+  document.body.classList.toggle('quiz-lock', state.view === 'step');
   if (state.view === 'landing') renderLanding();
   else if (state.view === 'result') renderResult();
   else renderStep();
@@ -45,19 +47,12 @@ function render() {
 function renderLanding() {
   root.innerHTML = `
     <section class="screen landing">
-      <div class="gemmark-lg">${gemMark(92)}</div>
       <div class="wordmark">Astro Laabh</div>
       <div class="tagline-rule"></div>
       <p class="eyebrow">Gemstone Efficacy Meter</p>
       <h1>How well is your gemstone <em>actually</em> working?</h1>
       <p class="lede">A 9-question Vedic assessment of your stone’s quality, light and wearing — with an honest, plain-language read on what’s helping and what isn’t.</p>
       <button class="btn btn-gold" id="begin">Begin the assessment ${I.arrow}</button>
-      <div class="meta-chips">
-        <span class="chip">${I.list} 9 questions</span>
-        <span class="chip">${I.clock} ~3 minutes</span>
-        <span class="chip">${I.lock} No login needed</span>
-      </div>
-      <p class="disclaimer">This is an educational guide — not a substitute for lab certification or an astrologer’s consultation.</p>
     </section>`;
 
   root.querySelector('#begin').addEventListener('click', () => {
@@ -99,15 +94,15 @@ function renderStep() {
       <h2 class="q-title">${esc(q.title)}</h2>
       ${q.hint ? `<p class="q-hint">${esc(q.hint)}</p>` : ''}
 
-      ${body}
+      <div class="step-body">${body}</div>
 
-      <div class="step-foot">
-        <button class="btn btn-primary" id="continue" disabled>
-          ${state.step === TOTAL_STEPS ? 'See my result' : 'Continue'} ${I.arrow}
-        </button>
-        <p class="foot-note">Every answer counts toward your score — including “Don’t know”.</p>
-      </div>
+      ${state.step === TOTAL_STEPS ? `<div class="step-foot">
+        <button class="btn btn-primary" id="continue" disabled>See my result ${I.arrow}</button>
+      </div>` : ''}
     </section>`;
+
+  // a pending auto-advance from a previous step must not fire on this one
+  clearTimeout(advanceTimer);
 
   // progress fill (animate after paint)
   requestAnimationFrame(() => { root.querySelector('#pfill').style.width = pct + '%'; });
@@ -119,21 +114,32 @@ function renderStep() {
   if (q.dynamic) wireDynamic(q, stoneId);
   else wireStatic(q);
 
-  // continue
+  // continue button only exists on the final step (others auto-advance)
   const cont = root.querySelector('#continue');
-  const refreshContinue = () => { cont.disabled = !selectionForStep(q); };
+  const refreshContinue = () => { if (cont) cont.disabled = !selectionForStep(q); };
   refreshContinue();
-  cont.addEventListener('click', goNext);
+  if (cont) cont.addEventListener('click', goNext);
   root._refreshContinue = refreshContinue;
 
   track('step_view', { step: state.step, stoneId: stoneId || null });
   markStep(state.step);
 }
 
+/* Steps 1–8 advance automatically once their selection is complete (Step 8
+   needs both metal + finger). The final step uses the explicit button. A short
+   delay lets the selected card's gold check register before moving on. */
+let advanceTimer = null;
+const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function maybeAdvance(q) {
+  if (q.step >= TOTAL_STEPS) return;       // last step → "See my result" button
+  if (!selectionForStep(q)) return;        // wait for a complete selection
+  clearTimeout(advanceTimer);
+  advanceTimer = setTimeout(goNext, reducedMotion() ? 80 : 340);
+}
+
 /* ---- static (single radiogroup) image-button options ---------------- */
 function gridClass(q) {
-  if (q.image === 'certification') return 'cols-1';   // landscape document cards
-  return '';
+  return '';   // default 2-up grid; visuals are authored to a 4:3 card
 }
 function staticOptionsHTML(q) {
   const sel = q.step === 1 ? state.stoneId : state.answers[q.factorKey]?.optionId;
@@ -153,7 +159,7 @@ function optCard(o, checked, idx, imageKey, stoneId, factor) {
     <span class="opt-badge" aria-hidden="true">${I.tick}</span>
     <span class="opt-meta">
       <span class="opt-label">${esc(o.label)}</span>
-      ${o.subLabel ? `<span class="opt-sub">${esc(o.subLabel)}</span>` : ''}
+      ${o.subLabel && imageKey !== 'origin' ? `<span class="opt-sub">${esc(o.subLabel)}</span>` : ''}
     </span>
   </button>`;
 }
@@ -162,7 +168,7 @@ function wireStatic(q) {
   const group = root.querySelector('[role="radiogroup"]');
   const opts = [...group.querySelectorAll('.opt-card')];
 
-  const choose = (el) => {
+  const choose = (el, advance) => {
     opts.forEach((o) => { o.setAttribute('aria-checked', o === el); o.tabIndex = o === el ? 0 : -1; });
     const id = el.dataset.id;
     if (q.step === 1) {
@@ -174,9 +180,10 @@ function wireStatic(q) {
     track('step_answer', { step: q.step, optionId: id, points: q.step === 1 ? 0 : q.options.find((o) => o.id === id).points });
     root._refreshContinue();
     persist();
+    if (advance) maybeAdvance(q);
   };
 
-  group.addEventListener('click', (e) => { const el = e.target.closest('.opt-card'); if (el) choose(el); });
+  group.addEventListener('click', (e) => { const el = e.target.closest('.opt-card'); if (el) choose(el, true); });
   group.addEventListener('keydown', (e) => radioKeys(e, opts, choose));
 }
 
@@ -199,7 +206,7 @@ function wireDynamic(q, stoneId) {
   root.querySelectorAll('[role="radiogroup"]').forEach((group) => {
     const factor = group.dataset.factor; // 'metal' | 'finger'
     const opts = [...group.querySelectorAll('.opt-card')];
-    const choose = (el) => {
+    const choose = (el, advance) => {
       opts.forEach((o) => { o.setAttribute('aria-checked', o === el); o.tabIndex = o === el ? 0 : -1; });
       const id = el.dataset.id;
       const pts = factor === 'metal' ? metalPoints(stoneId, id) : fingerPoints(stoneId, id);
@@ -207,8 +214,9 @@ function wireDynamic(q, stoneId) {
       track('step_answer', { step: q.step, factor, optionId: id, points: pts });
       root._refreshContinue();
       persist();
+      if (advance) maybeAdvance(q);   // fires once both metal + finger are chosen
     };
-    group.addEventListener('click', (e) => { const el = e.target.closest('.opt-card'); if (el) choose(el); });
+    group.addEventListener('click', (e) => { const el = e.target.closest('.opt-card'); if (el) choose(el, true); });
     group.addEventListener('keydown', (e) => radioKeys(e, opts, choose));
   });
 }
@@ -216,12 +224,14 @@ function wireDynamic(q, stoneId) {
 /* ---- shared radiogroup keyboard handling (PRD §10.7) ---------------- */
 function radioKeys(e, opts, choose) {
   const idx = opts.indexOf(document.activeElement);
+  // arrows move focus + select but do NOT auto-advance (keeps keyboard nav usable)
   if (['ArrowDown', 'ArrowRight'].includes(e.key)) {
-    e.preventDefault(); const n = opts[(idx + 1 + opts.length) % opts.length]; n.focus(); choose(n);
+    e.preventDefault(); const n = opts[(idx + 1 + opts.length) % opts.length]; n.focus(); choose(n, false);
   } else if (['ArrowUp', 'ArrowLeft'].includes(e.key)) {
-    e.preventDefault(); const n = opts[(idx - 1 + opts.length) % opts.length]; n.focus(); choose(n);
+    e.preventDefault(); const n = opts[(idx - 1 + opts.length) % opts.length]; n.focus(); choose(n, false);
   } else if (e.key === ' ' || e.key === 'Enter') {
-    e.preventDefault(); const el = e.target.closest('.opt-card'); if (el) choose(el);
+    // Enter / Space confirms and advances
+    e.preventDefault(); const el = e.target.closest('.opt-card'); if (el) choose(el, true);
   }
 }
 
@@ -240,7 +250,6 @@ function renderResult() {
   const result = score(state.stoneId, state.answers);
   const stone = STONES[state.stoneId];
   const gaps = buildGaps(state.stoneId, state.answers, QUESTIONS);
-  const rec = recommendCta(result, state.answers);
   const v = result.verdict;
 
   const pillars = [
@@ -254,7 +263,7 @@ function renderResult() {
 
   root.innerHTML = `
     <section class="screen result">
-      <div class="brandbar" style="margin-bottom:1.4rem">${gemMark(28)}<span class="wordmark" style="font-size:1rem">Astro Laabh</span></div>
+      <div class="brandbar" style="margin-bottom:1.4rem"><span class="wordmark" style="font-size:1rem">Astro Laabh</span></div>
       <p class="eyebrow verdict-eyebrow">Your ${esc(stone.displayName)} · ${esc(stone.vedicName)} · ${esc(stone.planet)}</p>
 
       <div class="ring-wrap">
@@ -275,7 +284,7 @@ function renderResult() {
       </div>
 
       <div class="verdict-label">${esc(v.label)}</div>
-      <p class="verdict-msg">${esc(v.message)}${result.capped ? ' <em>(score capped — a core disqualifier is present)</em>' : ''}</p>
+      <p class="verdict-msg">${esc(v.message)}${result.capped ? ' <em>(score capped - a core disqualifier is present)</em>' : ''}</p>
 
       <div class="divider-orn"><span class="lbl">The three pillars</span></div>
       <div class="pillars">
@@ -299,21 +308,10 @@ function renderResult() {
         </div>`).join('')}
       </div>` : `<div class="gaps-none">${I.check}<span>Your stone meets the key Vedic criteria across all factors. Maintain proper wearing and energising to keep it working.</span></div>`}
 
-      <div class="cta-card">
-        <p class="cta-eyebrow">${esc(rec.eyebrow)}</p>
-        <h3>${esc(rec.title)}</h3>
-        <p>${esc(rec.body)}</p>
-        <button class="btn btn-gold" id="cta-primary" data-key="${rec.key}">${esc(rec.cta)} ${I.arrow}</button>
-        <div class="cta-secondary">
-          <button class="btn btn-ghost" id="cta-consult" data-key="consultation">Book a consultation</button>
-          <button class="btn btn-ghost" id="cta-services" data-key="services">All services</button>
-        </div>
-      </div>
-
       ${leadHTML()}
 
       <div class="restart"><button id="restart">↺ Start over with a different stone</button></div>
-      <p class="disclaimer">This score is an educational guide based on your answers — not a substitute for lab certification or a consultation with an AstroLaabh astrologer.</p>
+      <p class="disclaimer">This score is an educational guide based on your answers - not a substitute for lab certification or a consultation with an AstroLaabh astrologer.</p>
     </section>`;
 
   // animate ring + number + pillars
@@ -324,16 +322,6 @@ function renderResult() {
     ring.style.strokeDashoffset = (C * (1 - target / 100)).toFixed(1);
     root.querySelectorAll('.pillar-bar').forEach((b) => { b.style.width = b.dataset.val + '%'; });
     animateNumber(pctnum, target, 1300);
-  });
-
-  // CTA tracking
-  root.querySelectorAll('[data-key]').forEach((btn) => {
-    if (!btn.classList.contains('btn')) return;
-    btn.addEventListener('click', () => {
-      track('cta_click', { service: btn.dataset.key });
-      const lead = root.querySelector('#lead');
-      if (lead) lead.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
   });
 
   wireLead();
@@ -354,12 +342,11 @@ function leadHTML() {
   }
   return `<div class="lead" id="lead">
     <h3>Get your full breakdown</h3>
-    <p class="lead-sub">Optional — leave your details and we’ll send the complete report and connect you with an expert. You can act on your result without this.</p>
+    <p class="lead-sub">Optional - leave your details and we’ll send the complete report and connect you with an expert. You can act on your result without this.</p>
     <form id="leadform" novalidate>
       <div class="field"><label for="lf-name">Name</label><input id="lf-name" name="name" autocomplete="name" required placeholder="Your name"/></div>
-      <div class="field"><label for="lf-contact">Phone or email</label><input id="lf-contact" name="contact" autocomplete="tel" required placeholder="WhatsApp number or email"/></div>
-      <label class="optin"><input type="checkbox" id="lf-wa" name="whatsapp" checked/><span>Send my breakdown and updates on WhatsApp.</span></label>
-      <button class="btn btn-primary" type="submit">Send me the breakdown</button>
+      <div class="field"><label for="lf-contact">Phone number</label><input id="lf-contact" name="contact" type="tel" autocomplete="tel" inputmode="tel" required placeholder="Your WhatsApp number"/></div>
+      <button class="btn btn-gold" type="submit">Send me the breakdown ${I.arrow}</button>
     </form>
   </div>`;
 }
@@ -375,7 +362,7 @@ function wireLead() {
       (!name ? form.name : form.contact).focus();
       return;
     }
-    track('lead_submit', { whatsapp: form.whatsapp.checked, hasContact: !!contact });
+    track('lead_submit', { hasContact: !!contact });
     state.leadSubmitted = true;
     persist();
     render();

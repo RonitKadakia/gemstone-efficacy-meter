@@ -323,7 +323,7 @@ export const captionFor = (key) => CAPTION[key] || '';
    ========================================================================= */
 const OVW = 200, OVH = 150, OCX = 100, OCY = 64;
 const ov = (inner, bg = '#FBF8F1') =>
-  `<svg viewBox="0 0 ${OVW} ${OVH}" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><rect width="${OVW}" height="${OVH}" fill="${bg}"/>${inner}</svg>`;
+  `<svg viewBox="0 0 ${OVW} ${OVH}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><rect width="${OVW}" height="${OVH}" fill="${bg}"/>${inner}</svg>`;
 const cap = (t, color = PALETTE.sage) =>
   `<text x="${OCX}" y="134" font-family="Mulish,sans-serif" font-size="12" font-weight="600" letter-spacing=".3" fill="${color}" text-anchor="middle">${t}</text>`;
 const qmark = (color = PALETTE.olive) =>
@@ -346,16 +346,41 @@ const OPT_VIS = {
       ${gem(OCX, OCY + 6, 46, c, { clarity: 1, luster: 0.92 })}`, '#FFFDF8');
   },
 
-  /* Step 2 — origin quality */
-  origin(optId, stoneId) {
-    const c = stoneColor(stoneId);
-    if (optId === 'premium') return ov(`${gem(OCX, OCY, 48, c, { clarity: 1, luster: 0.97 })}${sparkle(150, 36, 4)}${sparkle(54, 44, 3)}${sparkle(140, 92, 2.5)}`, '#FFFDF8');
-    if (optId === 'secondary') return ov(gem(OCX, OCY, 46, mix(c, '#A39F86', 0.4), { clarity: 0.6, luster: 0.55, inclusions: true }), '#F7F3EA');
-    if (optId === 'dontknow') return ov(`${gem(OCX, OCY - 4, 44, mix(c, '#CFC9B9', 0.72), { clarity: 0.7, luster: 0.4 })}${qmark('#FFFDF8')}`, '#EFE9DB');
-    /* synthetic / glass — too-uniform with gas bubbles */
-    return ov(`${gem(OCX, OCY, 46, mix(c, '#DCE2E6', 0.4), { clarity: 1, luster: 1 })}
-      <circle cx="${OCX - 12}" cy="${OCY + 4}" r="5" fill="#fff" fill-opacity=".55" stroke="#fff" stroke-opacity=".8"/>
-      <circle cx="${OCX + 14}" cy="${OCY - 8}" r="3.5" fill="#fff" fill-opacity=".5" stroke="#fff" stroke-opacity=".7"/>`, '#F1F2F0');
+  /* Step 2 — origin: text list of source countries instead of gem illustrations */
+  origin(optId) {
+    const row = (y, label, color = PALETTE.olive) =>
+      `<circle cx="28" cy="${y}" r="3" fill="${color}" fill-opacity=".8"/>` +
+      `<text x="40" y="${y + 4.5}" font-family="Mulish,sans-serif" font-size="12.5" font-weight="600" fill="${color}">${label}</text>`;
+
+    if (optId === 'premium') return ov(
+      `<text x="${OCX}" y="18" font-family="Mulish,sans-serif" font-size="9.5" font-weight="700" letter-spacing="1.4" fill="${PALETTE.sage}" text-anchor="middle">PREMIUM ORIGINS</text>` +
+      row(36, 'Ceylon (Sri Lanka)', PALETTE.olive) +
+      row(62, 'Burma (Myanmar)', PALETTE.olive) +
+      row(88, 'Kashmir (India)', PALETTE.olive) +
+      row(114, 'Colombia', PALETTE.olive),
+      '#FFFDF8');
+
+    if (optId === 'secondary') return ov(
+      `<text x="${OCX}" y="18" font-family="Mulish,sans-serif" font-size="9.5" font-weight="700" letter-spacing="1.4" fill="${PALETTE.sage}" text-anchor="middle">SECONDARY ORIGINS</text>` +
+      row(43, 'Africa') +
+      row(73, 'Brazil') +
+      row(103, 'Thailand / Other'),
+      '#F7F3EA');
+
+    if (optId === 'dontknow') return ov(
+      `<text x="${OCX}" y="18" font-family="Mulish,sans-serif" font-size="9.5" font-weight="700" letter-spacing="1.4" fill="${PALETTE.sage}" text-anchor="middle">ORIGIN UNKNOWN</text>` +
+      `<text x="${OCX}" y="72" font-family="Cormorant Garamond,serif" font-size="52" font-weight="600" fill="${PALETTE.sand}" text-anchor="middle">?</text>` +
+      `<text x="${OCX}" y="108" font-family="Mulish,sans-serif" font-size="11" fill="${PALETTE.sage}" text-anchor="middle">No source on record</text>`,
+      '#EFE9DB');
+
+    /* synthetic / glass */
+    return ov(
+      `<text x="${OCX}" y="18" font-family="Mulish,sans-serif" font-size="9.5" font-weight="700" letter-spacing="1.4" fill="${PALETTE.sage}" text-anchor="middle">NOT NATURAL</text>` +
+      `<text x="${OCX}" y="66" font-family="Mulish,sans-serif" font-size="13" font-weight="700" fill="#8C3A3A" text-anchor="middle">Lab-grown</text>` +
+      `<line x1="52" y1="78" x2="148" y2="78" stroke="${PALETTE.sand}" stroke-width="1" stroke-opacity=".6"/>` +
+      `<text x="${OCX}" y="100" font-family="Mulish,sans-serif" font-size="13" font-weight="700" fill="#8C3A3A" text-anchor="middle">Glass / Imitation</text>` +
+      `<text x="${OCX}" y="124" font-family="Mulish,sans-serif" font-size="10.5" fill="${PALETTE.sage}" text-anchor="middle">No natural resonance</text>`,
+      '#F1F2F0');
   },
 
   /* Step 3 — treatment */
@@ -394,10 +419,11 @@ const OPT_VIS = {
   /* Step 6 — carat: gem sized within a fixed reference outline */
   carat(optId, stoneId) {
     const c = stoneColor(stoneId);
+    const ref = `<circle cx="${OCX}" cy="${OCY}" r="52" fill="none" stroke="${PALETTE.sand}" stroke-width="1.2" stroke-dasharray="3 4" stroke-opacity=".7"/>`;
+    if (optId === 'dontknow') return ov(`${ref}${gem(OCX, OCY - 4, 30, mix(c, '#CFC9B9', 0.55), { clarity: 0.85, luster: 0.55 })}${qmark('#FFFDF8')}`, '#EFE9DB');
     const r = { under2: 20, '2to4': 30, '4to6': 41, '6plus': 52 }[optId] ?? 30;
     const ct = { under2: '1.5 ct', '2to4': '3 ct', '4to6': '5 ct', '6plus': '7 ct' }[optId] ?? '';
-    return ov(`<circle cx="${OCX}" cy="${OCY}" r="52" fill="none" stroke="${PALETTE.sand}" stroke-width="1.2" stroke-dasharray="3 4" stroke-opacity=".7"/>
-      ${gem(OCX, OCY, r, c, { clarity: 1, luster: 0.9 })}${cap(ct, PALETTE.goldDeep)}`, '#FFFDF8');
+    return ov(`${ref}${gem(OCX, OCY, r, c, { clarity: 1, luster: 0.9 })}${cap(ct, PALETTE.goldDeep)}`, '#FFFDF8');
   },
 
   /* Step 7 — certification documents */
@@ -416,6 +442,9 @@ const OPT_VIS = {
     if (optId === 'indian') return ov(doc('#5B6B86',
       `<circle cx="132" cy="96" r="13" fill="none" stroke="#5B6B86" stroke-width="2"/><text x="132" y="100" font-family="Mulish" font-size="8" font-weight="700" fill="#5B6B86" text-anchor="middle">IGI</text>`,
       'IGI · GII'), '#EEEDE8');
+    if (optId === 'unknown') return ov(doc(PALETTE.sage,
+      `<circle cx="132" cy="96" r="13" fill="none" stroke="${PALETTE.sage}" stroke-width="2" stroke-dasharray="3 2"/><text x="132" y="101" font-family="Cormorant Garamond,serif" font-size="16" font-weight="700" fill="${PALETTE.sage}" text-anchor="middle">?</text>`,
+      'LAB ?'), '#EDEAE2');
     /* none — a plain receipt with a struck-through seal */
     return ov(`<rect x="56" y="26" width="88" height="92" rx="4" fill="#FFFDF8" stroke="${PALETTE.sand}" stroke-dasharray="4 3"/>
       <line x1="68" y1="46" x2="128" y2="46" stroke="${PALETTE.sage}" stroke-width="2" stroke-opacity=".4"/>
@@ -468,19 +497,23 @@ function fingerVis(optId) {
   const idx = { index: 0, middle: 1, ring: 2, little: 3 }[optId];
   const fx = [74, 95, 116, 135];
   const tops = [44, 32, 42, 60];
+  const ringMark = (cx, cy) =>
+    `<rect x="${cx - 10}" y="${cy - 5}" width="20" height="11" rx="4" fill="${PALETTE.gold}"/>
+     <circle cx="${cx}" cy="${cy}" r="4.5" fill="${PALETTE.goldDeep}"/>
+     <circle cx="${cx}" cy="${cy}" r="13" fill="none" stroke="${PALETTE.goldDeep}" stroke-width="1.5" stroke-dasharray="3 3"/>`;
+
   let g = `<rect x="62" y="98" width="86" height="34" rx="14" fill="${PALETTE.sand}" fill-opacity=".55"/>`;
   for (let i = 0; i < 4; i++) {
     const w = 16, sel = i === idx;
     g += `<rect x="${fx[i] - w / 2}" y="${tops[i]}" width="${w}" height="${112 - tops[i]}" rx="8" fill="${PALETTE.sand}" fill-opacity=".55"/>`;
-    if (sel) {
-      const ry = tops[i] + 30;
-      g += `<rect x="${fx[i] - w / 2 - 2}" y="${ry - 5}" width="${w + 4}" height="11" rx="4" fill="${PALETTE.gold}"/>`;
-      g += `<circle cx="${fx[i]}" cy="${ry}" r="4.5" fill="${PALETTE.goldDeep}"/>`;
-      g += `<circle cx="${fx[i]}" cy="${ry}" r="13" fill="none" stroke="${PALETTE.goldDeep}" stroke-width="1.5" stroke-dasharray="3 3"/>`;
-    }
+    if (sel) g += ringMark(fx[i], tops[i] + 30);
   }
-  if (optId === 'dontknow') g = `<rect x="62" y="98" width="86" height="34" rx="14" fill="${PALETTE.sand}" fill-opacity=".4"/>` +
-    [0,1,2,3].map(i=>`<rect x="${fx[i]-8}" y="${tops[i]}" width="16" height="${112-tops[i]}" rx="8" fill="${PALETTE.sand}" fill-opacity=".4"/>`).join('') + qmark('#fff');
+  /* thumb — an angled digit off the lower-left of the palm, ringed gold */
+  if (optId === 'thumb') {
+    g += `<g transform="rotate(-40 64 108)"><rect x="30" y="100" width="46" height="16" rx="8" fill="${PALETTE.sand}" fill-opacity=".7"/>`
+       + ringMark(46, 108)
+       + `</g>`;
+  }
   return ov(g, '#F6EFE1');
 }
 
