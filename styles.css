@@ -110,7 +110,12 @@ img, svg { display: block; max-width: 100%; }
 }
 
 /* ============================================================ LANDING */
-.landing { text-align: center; padding-top: clamp(1.5rem, 8vh, 5rem); }
+.landing {
+  text-align: center;
+  /* fill the viewport (minus the app's vertical padding) and centre content */
+  min-height: calc(100dvh - 4.5rem);
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+}
 .landing .gemmark-lg { width: 92px; height: 92px; margin: 0 auto clamp(1.4rem,4vh,2rem); }
 .landing .wordmark { font-size: clamp(1.5rem, 6vw, 2rem); display: inline-block; margin-bottom: .25rem; }
 .landing .tagline-rule {
@@ -222,13 +227,14 @@ img, svg { display: block; max-width: 100%; }
 }
 
 .option-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: .8rem;
+  display: grid; grid-template-columns: 1fr 1fr; gap: .65rem;
+  grid-auto-rows: 1fr;        /* rows share height equally so every card fits */
+  min-height: 0;
 }
-.option-grid.cols-1 { grid-template-columns: 1fr; }
-.option-grid.compact { grid-template-columns: repeat(3, 1fr); gap: .55rem; }
+.option-grid.compact { grid-template-columns: repeat(3, 1fr); gap: .5rem; }
 
 .opt-card {
-  position: relative; display: flex; flex-direction: column;
+  position: relative; display: flex; flex-direction: column; min-height: 0;
   text-align: left; padding: 0; overflow: hidden;
   background: #fff;
   border: 1px solid var(--hairline);
@@ -246,18 +252,17 @@ img, svg { display: block; max-width: 100%; }
 .opt-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-card); border-color: var(--color-sand); }
 .opt-card:active { transform: translateY(-1px) scale(.995); }
 
-.opt-visual { display: block; width: 100%; aspect-ratio: 4 / 3; background: var(--surface-2); overflow: hidden; }
+/* visual fills the available card height; image is contained (never cropped) */
+.opt-visual { flex: 1 1 auto; min-height: 0; width: 100%; background: var(--surface-2); overflow: hidden; }
 .opt-visual svg { width: 100%; height: 100%; display: block; transition: transform .4s var(--ease); }
-.opt-card:hover .opt-visual svg { transform: scale(1.04); }
-.cols-1 .opt-visual { aspect-ratio: 16 / 7; }
-.compact .opt-visual { aspect-ratio: 1 / 1; }
+.opt-card:hover .opt-visual svg { transform: scale(1.03); }
 
-.opt-meta { padding: .7rem .8rem .85rem; }
-.opt-label { display: block; color: var(--color-ink); font-weight: 700; font-size: .98rem; line-height: 1.2; }
-.opt-sub { display: block; color: var(--color-primary-soft); font-size: .8rem; margin-top: .15rem; line-height: 1.25; }
-.compact .opt-meta { padding: .5rem .55rem .6rem; text-align: center; }
-.compact .opt-label { font-size: .82rem; }
-.compact .opt-sub { font-size: .7rem; }
+.opt-meta { flex: none; padding: .5rem .7rem .6rem; }
+.opt-label { display: block; color: var(--color-ink); font-weight: 700; font-size: clamp(.84rem, 2.3vw, .98rem); line-height: 1.18; }
+.opt-sub { display: block; color: var(--color-primary-soft); font-size: clamp(.7rem, 1.9vw, .8rem); margin-top: .12rem; line-height: 1.22; }
+.compact .opt-meta { padding: .35rem .45rem .45rem; text-align: center; }
+.compact .opt-label { font-size: clamp(.74rem, 2vw, .84rem); }
+.compact .opt-sub { font-size: .68rem; }
 
 /* selected state — gold ring + check badge */
 .opt-badge {
@@ -280,18 +285,38 @@ img, svg { display: block; max-width: 100%; }
 .opt-card[aria-checked="true"] .opt-label { color: var(--color-primary); }
 
 /* dynamic step-8: two sub-groups */
-.subfactor + .subfactor { margin-top: 1.5rem; }
 .subfactor-h {
   font-size: .72rem; letter-spacing: .2em; text-transform: uppercase;
-  color: var(--color-primary-soft); font-weight: 700; margin: 0 0 .7rem;
+  color: var(--color-primary-soft); font-weight: 700; margin: 0 0 .6rem;
   display: flex; align-items: center; gap: .5rem;
 }
 .subfactor-h .pts-tag {
   color: var(--color-accent-deep); font-size: .68rem;
 }
 
+/* =========================================================================
+   VIEWPORT-LOCKED QUIZ — the whole step fits on screen, no page scroll.
+   Only the step view is locked; landing & result scroll normally.
+   ========================================================================= */
+body.quiz-lock { overflow: hidden; height: 100dvh; }
+body.quiz-lock .app {
+  height: 100dvh; min-height: 0; overflow: hidden;
+  display: flex; flex-direction: column;
+  padding-top: .9rem; padding-bottom: .9rem;
+}
+body.quiz-lock .step { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+body.quiz-lock .topbar { flex: none; margin-bottom: 1rem; }
+body.quiz-lock .q-title { flex: none; margin-bottom: .35rem; font-size: clamp(1.35rem, 5.2vw, 1.85rem); }
+body.quiz-lock .q-hint { flex: none; margin-bottom: .75rem; font-size: clamp(.8rem, 2.2vw, .9rem); }
+
+/* the option area expands to fill whatever height is left */
+.step-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: .55rem; }
+.step-body > .option-grid { flex: 1 1 auto; min-height: 0; }
+.subfactor { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.subfactor > .option-grid { flex: 1 1 auto; min-height: 0; }
+
 /* ============================================================ FOOTER CTA */
-.step-foot { margin-top: 1.5rem; }
+.step-foot { flex: none; margin-top: .8rem; }
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: .55rem;
   width: 100%;
@@ -327,7 +352,7 @@ img, svg { display: block; max-width: 100%; }
 .result { text-align: center; }
 .result .verdict-eyebrow { margin-bottom: 1.2rem; }
 
-.ring-wrap { position: relative; width: 230px; height: 230px; margin: .4rem auto 1.4rem; }
+.ring-wrap { position: relative; width: 256px; height: 256px; margin: .4rem auto 1.5rem; }
 .ring-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 .ring-bg { fill: none; stroke: var(--color-surface); stroke-width: 14; }
 .ring-fg {
@@ -338,11 +363,14 @@ img, svg { display: block; max-width: 100%; }
   position: absolute; inset: 0; display: grid; place-items: center; align-content: center;
 }
 .ring-pct {
-  font-family: var(--font-display); font-weight: 600;
-  font-size: 4rem; line-height: .9; color: var(--color-primary);
+  /* Marcellus gives clean lining figures (no descending old-style digits) */
+  font-family: "Marcellus", var(--font-display); font-weight: 400;
+  font-size: 6rem; line-height: .82; color: var(--color-primary);
+  font-variant-numeric: lining-nums; font-feature-settings: "lnum" 1;
+  letter-spacing: .01em;
 }
-.ring-pct .sym { font-size: 1.6rem; vertical-align: super; color: var(--color-accent-deep); margin-left: .05em; }
-.ring-sub { font-size: .64rem; letter-spacing: .26em; text-transform: uppercase; color: var(--color-primary-soft); font-weight: 700; margin-top: .35rem; }
+.ring-pct .sym { font-size: 2.2rem; vertical-align: super; color: var(--color-accent-deep); margin-left: .04em; }
+.ring-sub { font-size: .92rem; letter-spacing: .3em; text-transform: uppercase; color: var(--color-primary-soft); font-weight: 700; margin-top: .5rem; }
 
 .verdict-label {
   font-family: var(--font-display); font-size: 1.9rem; font-weight: 500;
@@ -359,7 +387,7 @@ img, svg { display: block; max-width: 100%; }
   background: linear-gradient(90deg, transparent, var(--color-sand));
 }
 .divider-orn::after { background: linear-gradient(270deg, transparent, var(--color-sand)); }
-.divider-orn .lbl { font-size: .68rem; letter-spacing: .22em; text-transform: uppercase; color: var(--color-primary-soft); font-weight: 700; }
+.divider-orn .lbl { font-size: 1rem; letter-spacing: .16em; text-transform: uppercase; color: var(--color-primary-soft); font-weight: 700; white-space: nowrap; }
 
 /* pillar bars */
 .pillars { display: grid; gap: 1rem; text-align: left; margin-bottom: .5rem; }
@@ -408,26 +436,36 @@ img, svg { display: block; max-width: 100%; }
 .cta-card .btn-ghost { color:#F4EEE4; border-color: rgba(244,238,228,.35); }
 .cta-card .btn-ghost:hover { background: rgba(244,238,228,.08); }
 
-/* lead capture */
+/* lead capture — deep-olive / champagne-gold card theme (matches CTA card) */
 .lead {
-  text-align: left; margin-top: 1.4rem;
-  background: #fff; border: 1px solid var(--hairline);
-  border-radius: var(--radius); padding: 1.3rem; box-shadow: var(--shadow-soft);
+  text-align: left; margin-top: 1.6rem;
+  background: var(--olive-grad); color: #F4EEE4;
+  border-radius: var(--radius); padding: 1.5rem 1.4rem;
+  box-shadow: var(--shadow-card);
+  position: relative; overflow: hidden;
 }
-.lead h3 { font-family: var(--font-display); font-weight: 500; font-size: 1.4rem; color: var(--color-primary); margin: 0 0 .25rem; }
-.lead .lead-sub { color: var(--color-primary-soft); font-size: .86rem; margin: 0 0 1.1rem; }
-.field { margin-bottom: .85rem; }
-.field label { display: block; font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--color-primary-soft); font-weight: 700; margin-bottom: .35rem; }
+.lead::after {   /* yantra corner watermark, as on the CTA card */
+  content: ""; position: absolute; right: -42px; top: -42px; width: 175px; height: 175px;
+  background: url("./src/yantra.svg") center/contain no-repeat; opacity: .08; filter: invert(1);
+  pointer-events: none;
+}
+.lead > * { position: relative; z-index: 1; }   /* content above the watermark */
+.lead h3 { font-family: var(--font-display); font-weight: 500; font-size: 1.55rem; color: #F6F1E6; margin: 0 0 .3rem; }
+.lead .lead-sub { color: rgba(244,238,228,.78); font-size: .9rem; margin: 0 0 1.25rem; }
+.field { margin-bottom: .9rem; }
+.field label { display: block; font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--color-accent); font-weight: 700; margin-bottom: .38rem; }
 .field input {
-  width: 100%; font: inherit; color: var(--color-ink);
-  background: var(--surface-2); border: 1px solid var(--hairline);
+  width: 100%; font: inherit; color: #F6F1E6;
+  background: rgba(244,238,228,.08); border: 1px solid rgba(244,238,228,.24);
   border-radius: var(--radius-sm); padding: .8rem .9rem;
+  transition: background .2s, border-color .2s;
 }
-.field input:focus-visible { background: #fff; }
-.optin { display: flex; gap: .6rem; align-items: flex-start; font-size: .88rem; color: var(--color-ink); margin: .3rem 0 1.1rem; }
-.optin input { margin-top: .2rem; width: 18px; height: 18px; accent-color: var(--color-accent-deep); flex: none; }
+.field input::placeholder { color: rgba(244,238,228,.45); }
+.field input:focus-visible { background: rgba(244,238,228,.14); border-color: var(--color-accent); outline: none; }
+.optin { display: flex; gap: .6rem; align-items: flex-start; font-size: .88rem; color: rgba(244,238,228,.92); margin: .4rem 0 1.2rem; }
+.optin input { margin-top: .2rem; width: 18px; height: 18px; accent-color: var(--color-accent); flex: none; }
 .lead .thanks { text-align: center; padding: 1rem .5rem; }
-.lead .thanks svg { width: 46px; height: 46px; margin: 0 auto .6rem; }
+.lead .thanks svg { width: 46px; height: 46px; margin: 0 auto .6rem; stroke: var(--color-accent); }
 .lead .thanks h3 { margin-bottom: .3rem; }
 
 .restart { margin-top: 1.6rem; text-align: center; }
@@ -440,7 +478,6 @@ img, svg { display: block; max-width: 100%; }
 @media (min-width: 820px) {
   :root { --maxw: 40rem; }
   .app { padding-top: 2.2rem; }
-  .landing { padding-top: 4rem; }
   .step-image { margin-bottom: 1.5rem; }
 }
 

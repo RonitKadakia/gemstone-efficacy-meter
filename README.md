@@ -13,9 +13,13 @@ Serve the folder over HTTP (ES modules need `http://`, not `file://`):
 
 ```bash
 cd "Astro Laabh efficacy checker"
-python3 -m http.server 8765
-# open http://localhost:8765
+python3 serve.py            # http://localhost:8765 (custom port: python3 serve.py 3000)
 ```
+
+`serve.py` is a thin wrapper around Python's static server that disables caching,
+so edits to the ES modules always show up on reload. Plain
+`python3 -m http.server 8765` also works, but then the browser may cache the
+modules — do a hard refresh (Cmd/Ctrl+Shift+R) after edits.
 
 Any static host works in production (the PRD's existing AstroLaabh web stack / CDN).
 
@@ -60,7 +64,9 @@ in `src/config.js → SCORING`:
 - **§13.1 Normalization** — percentage of the 120-pt maximum (preserves the brief's
   exact factor weights). Pillar maxes 65 / 35 / 20.
 - **§13.3 "Don't know" partial credit** — metal = 3 pts (`METAL_DONTKNOW_POINTS`);
-  energising "Don't know" = 1 pt (per §7); wrong/unknown finger = 0.
+  carat "Don't know" = 3 pts; energising "Don't know" = 1 pt (per §7). Step 7
+  adds a "Yes – unknown lab" tier (1 pt) between Indian-lab and no-cert. Step 8's
+  finger options offer Thumb (always a wrong finger → 0 pts) in place of "Don't know".
 - **§13.4 Lead capture** — optional, offered after the result, never a gate.
 - **§13.8 Worst-case cap** — option **(a)**, weights as-is (recommended). The
   *typical* treated + opaque stone scores **24%** and compliance-only caps at
