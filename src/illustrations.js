@@ -429,12 +429,7 @@ const OPT_VIS = {
 
   /* Step 5 — luster */
   luster(optId, stoneId) {
-    const c = stoneColor(stoneId);
-    const lus = { bright: 1, moderate: 0.5, dull: 0.08, scratched: 0.32 }[optId] ?? 0;
-    const reflection = lus > 0.6 ? `<ellipse cx="${OCX - 16}" cy="${OCY - 18}" rx="20" ry="9" fill="#fff" fill-opacity=".75" transform="rotate(-28 ${OCX} ${OCY})"/>` : '';
-    return ov(`<linearGradient id="lz_${optId}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#F3EDE0"/><stop offset="100%" stop-color="#DED3C0"/></linearGradient>
-      <rect width="${OVW}" height="${OVH}" fill="url(#lz_${optId})"/>
-      ${gem(OCX, OCY, 46, c, { clarity: 0.85, luster: lus, scratched: optId === 'scratched' })}${reflection}`, '#E7DCC9');
+    return ovImg(`./src/images/luster_${optId}_${stoneId}.png`);
   },
 
   /* Step 6 — carat */
