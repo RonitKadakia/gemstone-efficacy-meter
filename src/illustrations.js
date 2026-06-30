@@ -337,14 +337,13 @@ const stoneColor = (id) => (STONES[id] || STONES.yellow_sapphire).gem.color;
 const sparkle = (x, y, r = 3) => `<g fill="#FFFFFF" fill-opacity=".9"><path d="M${x} ${y-r} L${x+r*0.5} ${y} L${x} ${y+r} L${x-r*0.5} ${y} Z"/><path d="M${x-r} ${y} L${x} ${y-r*0.5} L${x+r} ${y} L${x} ${y+r*0.5} Z"/></g>`;
 
 /* ---- per-option visual generators, keyed by step image key ---------- */
+const img = (src) => `<image href="${src}" x="0" y="0" width="${OVW}" height="${OVH}" preserveAspectRatio="xMidYMid slice"/>`;
+/* photo wrapper: container is 4:3 (matches viewBox), so meet fills edge-to-edge; inner image slices to fill canvas */
+const ovImg = (src) =>
+  `<svg viewBox="0 0 ${OVW} ${OVH}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><image href="${src}" x="0" y="0" width="${OVW}" height="${OVH}" preserveAspectRatio="xMidYMid slice"/></svg>`;
+
 const OPT_VIS = {
-  /* Step 1 — each card is the stone itself */
-  stone_select(optId) {
-    const c = stoneColor(optId);
-    return ov(`<radialGradient id="sg_${optId}" cx="50%" cy="45%" r="60%"><stop offset="0%" stop-color="${c}" stop-opacity=".22"/><stop offset="100%" stop-color="${c}" stop-opacity="0"/></radialGradient>
-      <rect width="${OVW}" height="${OVH}" fill="url(#sg_${optId})"/>
-      ${gem(OCX, OCY + 6, 46, c, { clarity: 1, luster: 0.92 })}`, '#FFFDF8');
-  },
+  stone_select:  (optId)          => ovImg(`./src/images/${optId}.webp`),
 
   /* Step 2 — origin: text list of source countries instead of gem illustrations */
   origin(optId) {
@@ -383,30 +382,52 @@ const OPT_VIS = {
       '#F1F2F0');
   },
 
-  /* Step 3 — treatment */
+  /* Step 3 — treatment: lab certificate */
   treatment(optId, stoneId) {
-    const c = stoneColor(stoneId);
-    const loupe = `<circle cx="${OCX}" cy="${OCY}" r="60" fill="none" stroke="${PALETTE.sand}" stroke-width="3" stroke-opacity=".7"/>`;
-    if (optId === 'untreated') return ov(`${loupe}${gem(OCX, OCY, 44, c, { clarity: 0.95, luster: 0.85, inclusions: true })}`, '#FFFDF8');
-    if (optId === 'heated') return ov(`${gem(OCX, OCY, 46, c, { clarity: 0.85, luster: 0.6, fractures: true })}
-      <ellipse cx="${OCX}" cy="${OCY}" rx="58" ry="46" fill="#E0852E" fill-opacity=".16"/>`, '#F6EEE2');
-    if (optId === 'dontknow') return ov(`${gem(OCX, OCY - 4, 44, mix(c, '#CFC9B9', 0.7), { clarity: 0.7, luster: 0.4 })}${qmark('#FFFDF8')}`, '#EFE9DB');
-    return ov(gem(OCX, OCY, 46, mix(c, '#FFFFFF', 0.18), { clarity: 0.78, luster: 0.5, fractures: true }), '#F4EFE6'); // fracture-filled
+    const base = (headFill) =>
+      `<rect x="28" y="10" width="144" height="126" rx="7" fill="#FFFDF8" stroke="${PALETTE.sand}" stroke-width="1.2"/>` +
+      `<rect x="28" y="10" width="144" height="26" rx="7" fill="${headFill}"/>` +
+      `<rect x="28" y="29" width="144" height="7" fill="${headFill}"/>` +
+      `<text x="${OCX}" y="27" font-family="Marcellus,serif" font-size="9" fill="#F4EEE4" letter-spacing="1.5" text-anchor="middle">LAB CERTIFICATE</text>` +
+      `<line x1="42" y1="50" x2="158" y2="50" stroke="${PALETTE.sage}" stroke-width="1.4" stroke-opacity=".35"/>` +
+      `<line x1="42" y1="60" x2="148" y2="60" stroke="${PALETTE.sage}" stroke-width="1.4" stroke-opacity=".25"/>`;
+
+    if (optId === 'untreated') return ov(
+      base(PALETTE.olive) +
+      `<text x="${OCX}" y="87" font-family="Mulish,sans-serif" font-size="11.5" font-weight="700" fill="${PALETTE.olive}" text-anchor="middle" letter-spacing=".4">UNHEATED /</text>` +
+      `<text x="${OCX}" y="103" font-family="Mulish,sans-serif" font-size="11.5" font-weight="700" fill="${PALETTE.olive}" text-anchor="middle" letter-spacing=".4">UNTREATED</text>` +
+      `<circle cx="152" cy="120" r="13" fill="${PALETTE.gold}"/>` +
+      `<circle cx="152" cy="120" r="13" fill="none" stroke="${PALETTE.goldDeep}" stroke-width="1.5"/>` +
+      `<path d="M146 120 l4 4 l8 -9" stroke="#5a4716" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
+      '#FFFDF8');
+
+    if (optId === 'heated') return ov(
+      base('#B85C2A') +
+      `<text x="${OCX}" y="87" font-family="Mulish,sans-serif" font-size="11.5" font-weight="700" fill="#B85C2A" text-anchor="middle" letter-spacing=".4">HEATED OR</text>` +
+      `<text x="${OCX}" y="103" font-family="Mulish,sans-serif" font-size="11.5" font-weight="700" fill="#B85C2A" text-anchor="middle" letter-spacing=".4">TREATED</text>` +
+      `<circle cx="152" cy="120" r="13" fill="none" stroke="#B85C2A" stroke-width="2"/>` +
+      `<text x="152" y="125" font-family="Mulish,sans-serif" font-size="11" font-weight="700" fill="#B85C2A" text-anchor="middle">H</text>`,
+      '#F6EEE2');
+
+    if (optId === 'dontknow') return ov(
+      base(PALETTE.sage) +
+      `<text x="${OCX}" y="103" font-family="Cormorant Garamond,serif" font-size="48" font-weight="600" fill="${PALETTE.sand}" text-anchor="middle">?</text>`,
+      '#EFE9DB');
+
+    return ov(
+      base('#6B5A8C') +
+      `<text x="${OCX}" y="95" font-family="Mulish,sans-serif" font-size="14" font-weight="700" fill="#6B5A8C" text-anchor="middle" letter-spacing="1">OILED</text>` +
+      `<circle cx="152" cy="120" r="13" fill="none" stroke="#6B5A8C" stroke-width="2"/>` +
+      `<text x="152" y="125" font-family="Mulish,sans-serif" font-size="9" font-weight="700" fill="#6B5A8C" text-anchor="middle">O</text>`,
+      '#F4EFE6');
   },
 
-  /* Step 4 — light transmission (KEY) — backlit on dark to read transmission */
+  /* Step 4 — light transmission */
   light(optId, stoneId) {
-    const c = stoneColor(stoneId);
-    const clar = { clear: 1, mostly: 0.68, cloudy: 0.32, opaque: 0 }[optId] ?? 0;
-    const beam = clar > 0.08
-      ? `<defs><linearGradient id="bm_${optId}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${PALETTE.gold}" stop-opacity="${0.5 * clar}"/><stop offset="100%" stop-color="${PALETTE.gold}" stop-opacity="0"/></linearGradient></defs>
-         <polygon points="${OCX - 38},6 ${OCX + 38},6 ${OCX + 60},${OCY + 30} ${OCX - 60},${OCY + 30}" fill="url(#bm_${optId})"/>`
-      : '';
-    const bulb = `<circle cx="${OCX}" cy="10" r="6" fill="${PALETTE.gold}" fill-opacity="${0.4 + 0.5 * clar}"/>`;
-    return ov(`${beam}${bulb}${gem(OCX, OCY + 8, 42, c, { clarity: clar, luster: 0.55, backlit: clar > 0.1 })}`, '#23271B');
+    return ovImg(`./src/images/light_${optId}_${stoneId}.png`);
   },
 
-  /* Step 5 — luster (surface reflection) */
+  /* Step 5 — luster */
   luster(optId, stoneId) {
     const c = stoneColor(stoneId);
     const lus = { bright: 1, moderate: 0.5, dull: 0.08, scratched: 0.32 }[optId] ?? 0;
@@ -416,7 +437,7 @@ const OPT_VIS = {
       ${gem(OCX, OCY, 46, c, { clarity: 0.85, luster: lus, scratched: optId === 'scratched' })}${reflection}`, '#E7DCC9');
   },
 
-  /* Step 6 — carat: gem sized within a fixed reference outline */
+  /* Step 6 — carat */
   carat(optId, stoneId) {
     const c = stoneColor(stoneId);
     const ref = `<circle cx="${OCX}" cy="${OCY}" r="52" fill="none" stroke="${PALETTE.sand}" stroke-width="1.2" stroke-dasharray="3 4" stroke-opacity=".7"/>`;
@@ -445,7 +466,6 @@ const OPT_VIS = {
     if (optId === 'unknown') return ov(doc(PALETTE.sage,
       `<circle cx="132" cy="96" r="13" fill="none" stroke="${PALETTE.sage}" stroke-width="2" stroke-dasharray="3 2"/><text x="132" y="101" font-family="Cormorant Garamond,serif" font-size="16" font-weight="700" fill="${PALETTE.sage}" text-anchor="middle">?</text>`,
       'LAB ?'), '#EDEAE2');
-    /* none — a plain receipt with a struck-through seal */
     return ov(`<rect x="56" y="26" width="88" height="92" rx="4" fill="#FFFDF8" stroke="${PALETTE.sand}" stroke-dasharray="4 3"/>
       <line x1="68" y1="46" x2="128" y2="46" stroke="${PALETTE.sage}" stroke-width="2" stroke-opacity=".4"/>
       <line x1="68" y1="58" x2="120" y2="58" stroke="${PALETTE.sage}" stroke-width="2" stroke-opacity=".3"/>
@@ -469,7 +489,6 @@ const OPT_VIS = {
       <path d="M58 ${OCY+18} a42 16 0 0 0 84 0 Z" fill="#EAF0F2" stroke="${PALETTE.sage}" stroke-opacity=".4"/>
       <ellipse cx="${OCX}" cy="${OCY+18}" rx="42" ry="6" fill="#DCE7EA"/>`, '#F4F6F4');
     if (optId === 'no') return ov(`${gem(OCX, OCY, 34, c, { clarity: 1, luster: 0.85 })}<line x1="46" y1="${OCY+44}" x2="154" y2="${OCY+44}" stroke="${PALETTE.sand}" stroke-width="2" stroke-opacity=".6"/>`, '#F4EFE6');
-    /* dontknow — gifted / inherited */
     return ov(`${gem(OCX, OCY - 4, 30, mix(c, '#CFC9B9', 0.55), { clarity: 0.85, luster: 0.6 })}${qmark('#FFFDF8')}`, '#EFE9DB');
   },
 };
@@ -508,7 +527,6 @@ function fingerVis(optId) {
     g += `<rect x="${fx[i] - w / 2}" y="${tops[i]}" width="${w}" height="${112 - tops[i]}" rx="8" fill="${PALETTE.sand}" fill-opacity=".55"/>`;
     if (sel) g += ringMark(fx[i], tops[i] + 30);
   }
-  /* thumb — an angled digit off the lower-left of the palm, ringed gold */
   if (optId === 'thumb') {
     g += `<g transform="rotate(-40 64 108)"><rect x="30" y="100" width="46" height="16" rx="8" fill="${PALETTE.sand}" fill-opacity=".7"/>`
        + ringMark(46, 108)
