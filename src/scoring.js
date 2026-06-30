@@ -5,7 +5,8 @@
 
 import { SCORING, STONES, VERDICTS, FACTOR_NAMES, metalLabel, fingerLabel } from './config.js';
 
-export const METAL_MAX = 8;   // PRD §8.1
+export const METAL_MAX = 8;   // PRD §8.1 — max for traditional correct metals (gold/silver/panchdhatu)
+export const PLATINUM_POINTS = 10; // platinum always scores METAL_MAX + 2
 export const FINGER_MAX = 5;
 
 /* factor → pillar (PRD §8.1) */
@@ -17,13 +18,14 @@ export const FACTOR_PILLAR = {
 export const FACTOR_MAX = {
   origin: 25, treatment: 20, carat: 15, certification: 5,
   light_transmission: 20, luster: 15,
-  metal: 8, finger: 5, energising: 7,
+  metal: PLATINUM_POINTS, finger: 5, energising: 7,
 };
 
 /* -------- Step 8 dynamic point logic (PRD §10.4) --------------------- */
 export function metalPoints(stoneId, optionId) {
   const stone = STONES[stoneId];
   if (!stone || !optionId) return 0;
+  if (optionId === 'platinum') return PLATINUM_POINTS;
   if (stone.correctMetals.includes(optionId)) return METAL_MAX;
   if (optionId === 'dontknow') return SCORING.METAL_DONTKNOW_POINTS; // §13.3 partial
   return 0;
@@ -108,19 +110,27 @@ export function buildGaps(stoneId, answers, questions) {
     if (mPts < METAL_MAX) {
       const correct = stone.correctMetals.map(metalLabel).join(' or ');
       const text = answers.metal.optionId === 'dontknow'
-        ? `You’re not sure which metal the stone is set in - ${stone.planet}’s stone needs ${correct} to keep the energetic circuit intact.`
-        : `Your stone is set in the wrong metal - ${stone.planet}’s stone should be set in ${correct}, and the wrong metal breaks the energetic circuit.`;
+        ? `You’re not sure which metal the stone is set in - ${stone.planet}'s stone needs ${correct} to keep the energetic circuit intact.`
+        : `Your stone is set in the wrong metal - ${stone.planet}'s stone should be set in ${correct}, and the wrong metal breaks the energetic circuit.`;
       gaps.push({ factorKey: 'metal', factorName: FACTOR_NAMES.metal, text, lost: METAL_MAX - mPts });
     }
   }
-  // dynamic: finger
+  // dynamic: finger / where worn
   if (stone && answers.finger) {
     const fPts = fingerPoints(stoneId, answers.finger.optionId);
     if (fPts < FINGER_MAX) {
       const correct = fingerLabel(stone.correctFinger);
-      const text = answers.finger.optionId === 'dontknow'
-        ? `You’re not sure which finger it’s worn on - ${stone.planet}’s stone belongs on the ${correct}.`
-        : `Your stone is worn on the wrong finger - ${stone.planet}’s stone belongs on the ${correct}. The wrong finger misdirects the energy rather than nullifying it.`;
+      const wornAs = answers.finger.optionId;
+      let text;
+      if (wornAs === 'pendant') {
+        text = `Your stone is worn as a pendant - ${stone.planet}'s stone belongs on the ${correct} for the energy to be properly directed to the relevant meridian.`;
+      } else if (wornAs === 'bracelet') {
+        text = `Your stone is worn as a bracelet - ${stone.planet}'s stone belongs on the ${correct}. Wearing it on the wrist disperses energy instead of directing it.`;
+      } else if (wornAs === 'dontknow') {
+        text = `You’re not sure where it’s worn - ${stone.planet}'s stone belongs on the ${correct}.`;
+      } else {
+        text = `Your stone is worn on the wrong finger - ${stone.planet}'s stone belongs on the ${correct}. The wrong finger misdirects the energy rather than nullifying it.`;
+      }
       gaps.push({ factorKey: 'finger', factorName: FACTOR_NAMES.finger, text, lost: FINGER_MAX - fPts });
     }
   }

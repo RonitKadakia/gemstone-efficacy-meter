@@ -198,8 +198,8 @@ function dynamicOptionsHTML(q, stoneId) {
         ${options.map((o, i) => optCard(o, o.id === sel, i, q.image, stoneId, name)).join('')}
       </div>
     </div>`;
-  return sub('Metal it’s set in', 8, 'metal', q.metalOptions, m)
-       + sub('Finger it’s worn on', 5, 'finger', q.fingerOptions, f);
+  return sub('Metal it’s set in', 10, 'metal', q.metalOptions, m)
+       + sub('Where is it worn?', 5, 'finger', q.fingerOptions, f);
 }
 
 function wireDynamic(q, stoneId) {

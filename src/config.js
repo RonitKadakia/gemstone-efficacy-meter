@@ -7,8 +7,8 @@
 
 /* ---- Sign-off decisions (PRD §13) baked in here, all togglable -------- */
 export const SCORING = {
-  PILLAR_MAX: { quality: 65, light: 35, compliance: 20 }, // §8.1
-  TOTAL_MAX: 120,                                          // §8.2
+  PILLAR_MAX: { quality: 65, light: 35, compliance: 22 }, // §8.1 — compliance raised to 22 (platinum bonus +2 on metal)
+  TOTAL_MAX: 122,                                          // §8.2 — raised from 120 (platinum can score 10 vs gold's 8)
   // §13.1 - percentage of 120 (recommended; preserves brief weights).
   // §13.8 - worst-case cap. Default (a): accept weights as-is.
   //   Set HARD_GATE=true for decision (b): cap opaque / fracture-filled at 29%.
@@ -62,7 +62,7 @@ export const VERDICTS = [
 export const FACTOR_NAMES = {
   origin: 'Origin', treatment: 'Treatment', carat: 'Carat weight', certification: 'Certification',
   light_transmission: 'Light transmission', luster: 'Luster',
-  metal: 'Metal setting', finger: 'Finger worn on', energising: 'Energising ritual',
+  metal: 'Metal setting', finger: 'Where worn', energising: 'Energising ritual',
 };
 
 /* =========================================================================
@@ -190,9 +190,10 @@ export const QUESTIONS = [
     // Options resolved dynamically against the selected stone (see scoring.js).
     metalOptions: [
       { id: 'gold',       label: 'Gold' },
+      { id: 'platinum',   label: 'Platinum' },
       { id: 'silver',     label: 'Silver' },
-      { id: 'panchdhatu', label: 'Panchdhatu', subLabel: 'Five-metal alloy' },
-      { id: 'other',      label: 'Other metal', subLabel: 'Steel, brass, copper, etc.' },
+      { id: 'panchdhatu', label: 'Panchdhatu' },
+      { id: 'other',      label: 'Other metal' },
       { id: 'dontknow',   label: 'Don’t know' },
     ],
     fingerOptions: [
@@ -201,6 +202,8 @@ export const QUESTIONS = [
       { id: 'ring',     label: 'Ring finger' },
       { id: 'little',   label: 'Little finger' },
       { id: 'thumb',    label: 'Thumb' },
+      { id: 'pendant',  label: 'Pendant',  subLabel: 'Worn around the neck' },
+      { id: 'bracelet', label: 'Bracelet', subLabel: 'Worn on the wrist' },
     ],
   },
 

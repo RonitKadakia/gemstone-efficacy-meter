@@ -489,25 +489,79 @@ const OPT_VIS = {
 };
 
 /* ---- Step 8 metal swatches & finger visuals ------------------------- */
+/* ===== METAL CARD ARTWORK SIZE =========================================
+   Controls how big the metal-band + gemstone illustration looks inside each
+   Step-8 "Metal it’s set in" option card. Bump METAL_RING_R to enlarge the
+   whole image — the band thickness and gemstone scale with it automatically.
+   (Drawing canvas is 200 × 150; horizontal centre is OCX = 100.)            */
+const METAL_RING_R = 60;                              // ← EDIT THIS: overall image size
+const METAL_RING_W = Math.round(METAL_RING_R * 0.40); // band thickness (derived)
+const METAL_GEM_R  = Math.round(METAL_RING_R * 0.46); // gemstone radius (derived)
+const METAL_CY     = 80;                              // vertical centre in the card
+/* ======================================================================= */
+
 function metalVis(optId, stoneId) {
   const c = stoneColor(stoneId);
-  const metalC = { gold: '#D9B84F', silver: '#CBD0D6', other: '#9AA0A6' }[optId];
-  const gemTop = gem(OCX, OCY - 18, 12, c, { clarity: 1, luster: 0.95 });
+  const metalC = { gold: '#D9B84F', silver: '#CBD0D6', platinum: '#E4E6EB', other: '#9AA0A6' }[optId];
+  const gemY = METAL_CY - METAL_RING_R + Math.round(METAL_GEM_R * 0.35); // gem sits on the upper band
+  const gemTop = gem(OCX, gemY, METAL_GEM_R, c, { clarity: 1, luster: 0.95 });
+  const inner = METAL_RING_R - Math.round(METAL_RING_W * 0.42);          // inner highlight ring
+
   if (optId === 'dontknow') {
-    return ov(`<circle cx="${OCX}" cy="${OCY + 14}" r="30" fill="none" stroke="${PALETTE.sand}" stroke-width="11"/>${qmark('#FFFDF8')}`, '#EFE9DB');
+    return ov(`<circle cx="${OCX}" cy="${METAL_CY}" r="${METAL_RING_R}" fill="none" stroke="${PALETTE.sand}" stroke-width="${METAL_RING_W}"/>${qmark('#FFFDF8')}`, '#EFE9DB');
   }
   let band;
   if (optId === 'panchdhatu') {
     band = `<defs><linearGradient id="pd" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#D9B84F"/><stop offset="40%" stop-color="#CBD0D6"/><stop offset="70%" stop-color="#B98E5E"/><stop offset="100%" stop-color="#D9B84F"/></linearGradient></defs>
-      <circle cx="${OCX}" cy="${OCY + 14}" r="30" fill="none" stroke="url(#pd)" stroke-width="12"/>`;
+      <circle cx="${OCX}" cy="${METAL_CY}" r="${METAL_RING_R}" fill="none" stroke="url(#pd)" stroke-width="${METAL_RING_W}"/>`;
+  } else if (optId === 'platinum') {
+    // Platinum: cool silver-white with a subtle two-tone shimmer
+    band = `<defs><linearGradient id="plt" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#F0F1F4"/><stop offset="45%" stop-color="#C8CBD4"/><stop offset="100%" stop-color="#E8E9EE"/></linearGradient></defs>
+      <circle cx="${OCX}" cy="${METAL_CY}" r="${METAL_RING_R}" fill="none" stroke="url(#plt)" stroke-width="${METAL_RING_W}"/>
+      <circle cx="${OCX}" cy="${METAL_CY}" r="${inner}" fill="none" stroke="#ffffff" stroke-opacity=".55" stroke-width="2"/>`;
   } else {
-    band = `<circle cx="${OCX}" cy="${OCY + 14}" r="30" fill="none" stroke="${metalC}" stroke-width="12"/>
-      <circle cx="${OCX}" cy="${OCY + 14}" r="25" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="2"/>`;
+    band = `<circle cx="${OCX}" cy="${METAL_CY}" r="${METAL_RING_R}" fill="none" stroke="${metalC}" stroke-width="${METAL_RING_W}"/>
+      <circle cx="${OCX}" cy="${METAL_CY}" r="${inner}" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="2"/>`;
   }
   return ov(`${band}${gemTop}`, '#F3ECDD');
 }
 
-function fingerVis(optId) {
+/* ===== "WHERE WORN" CARD ARTWORK SIZE ==================================
+   Size of the gemstone in the Step-8 "Where is it worn?" pendant / bracelet
+   option cards. Bump these to enlarge the artwork. (Canvas is 200 × 150.)   */
+const PENDANT_GEM_R  = 25;   // ← EDIT THIS: pendant gemstone size
+const BRACELET_GEM_R = 20;   // ← EDIT THIS: bracelet gemstone size
+/* ======================================================================= */
+
+function fingerVis(optId, stoneId) {
+  const c = stoneColor(stoneId);
+
+  if (optId === 'pendant') {
+    // Necklace chain arc + hanging gem (centred, fills the card)
+    const gy = 96;                                   // gem vertical centre
+    const apex = 34;                                 // top of the chain arc / drop
+    const bailY = gy - PENDANT_GEM_R - 6;            // ring above the stone
+    const chain =
+      `<path d="M 14,54 Q 100,16 186,54" fill="none" stroke="${PALETTE.sand}" stroke-width="3" stroke-linecap="round" opacity=".85"/>`;
+    const drop =
+      `<line x1="100" y1="${apex}" x2="100" y2="${bailY}" stroke="${PALETTE.sand}" stroke-width="2.5" opacity=".85"/>`;
+    const bail =
+      `<ellipse cx="100" cy="${bailY}" rx="6" ry="5" fill="${PALETTE.sand}" fill-opacity=".7" stroke="${PALETTE.goldDeep}" stroke-width="1.2"/>`;
+    return ov(chain + drop + bail + gem(OCX, gy, PENDANT_GEM_R, c, { clarity: 1, luster: 0.95 }), '#F6EFE1');
+  }
+
+  if (optId === 'bracelet') {
+    // Wrist (forearm cross-section) + band + stone (centred, fills the card)
+    const cy = 80;                                   // band & stone vertical centre
+    const wrist =
+      `<rect x="34" y="28" width="132" height="106" rx="30" fill="${PALETTE.sand}" fill-opacity=".35"/>`;
+    const band =
+      `<rect x="26" y="${cy - 16}" width="148" height="32" rx="7" fill="${PALETTE.sand}" fill-opacity=".75" stroke="${PALETTE.goldDeep}" stroke-width="1.4"/>`;
+    const setting =
+      `<ellipse cx="100" cy="${cy}" rx="${BRACELET_GEM_R + 6}" ry="12" fill="${PALETTE.goldDeep}" fill-opacity=".6"/>`;
+    return ov(wrist + band + setting + gem(OCX, cy - 3, BRACELET_GEM_R, c, { clarity: 1, luster: 0.95 }), '#F6EFE1');
+  }
+
   const idx = { index: 0, middle: 1, ring: 2, little: 3 }[optId];
   const fx = [74, 95, 116, 135];
   const tops = [44, 32, 42, 60];
@@ -522,17 +576,19 @@ function fingerVis(optId) {
     g += `<rect x="${fx[i] - w / 2}" y="${tops[i]}" width="${w}" height="${112 - tops[i]}" rx="8" fill="${PALETTE.sand}" fill-opacity=".55"/>`;
     if (sel) g += ringMark(fx[i], tops[i] + 30);
   }
-  if (optId === 'thumb') {
-    g += `<g transform="rotate(-40 64 108)"><rect x="30" y="100" width="46" height="16" rx="8" fill="${PALETTE.sand}" fill-opacity=".7"/>`
-       + ringMark(46, 108)
-       + `</g>`;
-  }
+  // thumb — always part of the hand now, angled off the left of the palm so it
+  // points top-left. It wears the ring only on the 'thumb' option.
+  const thPx = 64, thPy = 112;
+  g += `<g transform="rotate(35 ${thPx} ${thPy})">`
+     + `<rect x="${thPx - 30}" y="${thPy - 8}" width="34" height="16" rx="8" fill="${PALETTE.sand}" fill-opacity=".55"/>`
+     + (optId === 'thumb' ? ringMark(thPx - 16, thPy) : '')
+     + `</g>`;
   return ov(g, '#F6EFE1');
 }
 
 export function optionVisual(imageKey, optionId, stoneId, factor) {
   if (factor === 'metal') return metalVis(optionId, stoneId);
-  if (factor === 'finger') return fingerVis(optionId);
+  if (factor === 'finger') return fingerVis(optionId, stoneId);
   const fn = OPT_VIS[imageKey];
   return fn ? fn(optionId, stoneId) : ov(gem(OCX, OCY, 40, stoneColor(stoneId), { clarity: 1, luster: 0.9 }));
 }
