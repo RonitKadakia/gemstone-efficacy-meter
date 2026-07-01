@@ -322,8 +322,14 @@ export const captionFor = (key) => CAPTION[key] || '';
    §5.4 calibration). Returns a full <svg> sized to a 4:3 card.
    ========================================================================= */
 const OVW = 200, OVH = 150, OCX = 100, OCY = 64;
+/* Step 6 carat card: font size of the carats / ratti text. Lower to shrink. */
+const CARAT_FONT_SIZE = 24;   // ← EDIT THIS
 const ov = (inner, bg = '#FBF8F1') =>
   `<svg viewBox="0 0 ${OVW} ${OVH}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><rect width="${OVW}" height="${OVH}" fill="${bg}"/>${inner}</svg>`;
+/* full-bleed variant: SVG scales to *cover* the card (no empty letterbox bands)
+   so the artwork occupies the entire visual area. */
+const ovFill = (inner, bg = '#FBF8F1') =>
+  `<svg viewBox="0 0 ${OVW} ${OVH}" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><rect width="${OVW}" height="${OVH}" fill="${bg}"/>${inner}</svg>`;
 const cap = (t, color = PALETTE.sage) =>
   `<text x="${OCX}" y="134" font-family="Mulish,sans-serif" font-size="12" font-weight="600" letter-spacing=".3" fill="${color}" text-anchor="middle">${t}</text>`;
 const qmark = (color = PALETTE.olive) =>
@@ -435,11 +441,21 @@ const OPT_VIS = {
   /* Step 6 — carat */
   carat(optId, stoneId) {
     const c = stoneColor(stoneId);
-    const ref = `<circle cx="${OCX}" cy="${OCY}" r="52" fill="none" stroke="${PALETTE.sand}" stroke-width="1.2" stroke-dasharray="3 4" stroke-opacity=".7"/>`;
-    if (optId === 'dontknow') return ov(`${ref}${gem(OCX, OCY - 4, 30, mix(c, '#CFC9B9', 0.55), { clarity: 0.85, luster: 0.55 })}${qmark('#FFFDF8')}`, '#EFE9DB');
-    const r = { under2: 20, '2to4': 30, '4to6': 41, '6plus': 52 }[optId] ?? 30;
-    const ct = { under2: '1.5 ct', '2to4': '3 ct', '4to6': '5 ct', '6plus': '7 ct' }[optId] ?? '';
-    return ov(`${ref}${gem(OCX, OCY, r, c, { clarity: 1, luster: 0.9 })}${cap(ct, PALETTE.goldDeep)}`, '#FFFDF8');
+    if (optId === 'dontknow') {
+      const ref = `<circle cx="${OCX}" cy="${OCY}" r="52" fill="none" stroke="${PALETTE.sand}" stroke-width="1.2" stroke-dasharray="3 4" stroke-opacity=".7"/>`;
+      return ov(`${ref}${gem(OCX, OCY - 4, 30, mix(c, '#CFC9B9', 0.55), { clarity: 0.85, luster: 0.55 })}${qmark('#FFFDF8')}`, '#EFE9DB');
+    }
+    // text-only weight graphic — carats with the ratti equivalent beneath
+    const TXT = {
+      under2:  ['Under 2 carats', 'or under 2 ratti'],
+      '2to4':  ['2-4 carats',     'or 2-4.5 ratti'],
+      '4to6':  ['4-6 carats',     'or 4.5-7 ratti'],
+      '6plus': ['6+ carats',      'or 7+ ratti'],
+    }[optId] ?? ['', ''];
+    const g =
+      `<text x="${OCX}" y="65" font-family="Cormorant Garamond,serif" font-size="${CARAT_FONT_SIZE}" font-weight="600" fill="${PALETTE.olive}" text-anchor="middle">${TXT[0]}</text>` +
+      `<text x="${OCX}" y="103" font-family="Cormorant Garamond,serif" font-size="${CARAT_FONT_SIZE}" font-weight="600" fill="${PALETTE.sage}" text-anchor="middle">${TXT[1]}</text>`;
+    return ovFill(g, '#FFFDF8');
   },
 
   /* Step 7 — certification documents */

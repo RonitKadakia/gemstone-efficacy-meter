@@ -11,6 +11,12 @@ import { track, markStep, markComplete, saveState, loadState, clearState } from 
 
 const root = document.getElementById('app');
 
+/* ---- Lead capture → Google Sheet -------------------------------------
+   Paste your deployed Apps Script Web App URL below to start saving leads.
+   Leave it as '' to disable (the form still works, just doesn't send).
+   One-time setup instructions: see google-apps-script.gs in the repo root. */
+const LEAD_ENDPOINT = 'https://script.google.com/macros/s/AKfycbxCmtjHmvWmWoQ_AE7QdL_XFOivz1TDgsodJwA9WCAaL80nETskB-8yraOkcjS3Q4aYlA/exec';
+
 /* ---------------------------------------------------------------- state */
 const fresh = () => ({ view: 'landing', step: 1, stoneId: null, answers: {}, leadSubmitted: false });
 let state = loadState() || fresh();
@@ -159,7 +165,7 @@ function optCard(o, checked, idx, imageKey, stoneId, factor) {
     <span class="opt-badge" aria-hidden="true">${I.tick}</span>
     <span class="opt-meta">
       <span class="opt-label">${esc(o.label)}</span>
-      ${o.subLabel && imageKey !== 'origin' ? `<span class="opt-sub">${esc(o.subLabel)}</span>` : ''}
+      ${o.subLabel && imageKey !== 'origin' && imageKey !== 'carat' && imageKey !== 'hand' ? `<span class="opt-sub">${esc(o.subLabel)}</span>` : ''}
     </span>
   </button>`;
 }
@@ -337,18 +343,56 @@ function leadHTML() {
   if (state.leadSubmitted) {
     return `<div class="lead" id="lead"><div class="thanks">
       ${I.check}<h3>Thank you</h3>
-      <p class="lead-sub">Your full breakdown is on its way. An AstroLaabh expert will reach out shortly.</p>
+      <p class="lead-sub">An Astro Laabh concierge will reach out shortly.</p>
     </div></div>`;
   }
   return `<div class="lead" id="lead">
-    <h3>Get your full breakdown</h3>
-    <p class="lead-sub">Optional - leave your details and we’ll send the complete report and connect you with an expert. You can act on your result without this.</p>
+    <h3>Get the highest quality gemstone, suited for your needs.</h3>
+    <p class="lead-sub">Leave your details and our expert gemologist will get in touch with you. We source the best gemstones globally, exclusively for our clients — certified by the reputed international labs.</p>
     <form id="leadform" novalidate>
       <div class="field"><label for="lf-name">Name</label><input id="lf-name" name="name" autocomplete="name" required placeholder="Your name"/></div>
       <div class="field"><label for="lf-contact">Phone number</label><input id="lf-contact" name="contact" type="tel" autocomplete="tel" inputmode="tel" required placeholder="Your WhatsApp number"/></div>
       <button class="btn btn-gold" type="submit">Send me the breakdown ${I.arrow}</button>
     </form>
   </div>`;
+}
+
+/* POST the lead + full quiz result to the Google Sheet (fire-and-forget).
+   Uses a text/plain 'simple' request + no-cors so a static page can reach
+   Apps Script without a CORS preflight; we never block the UX on logging. */
+function saveLeadToSheet(name, contact) {
+  if (!LEAD_ENDPOINT) return;                     // not configured yet
+  const ans = state.answers || {};
+  const stone = state.stoneId ? STONES[state.stoneId] : null;
+  const result = state.stoneId ? score(state.stoneId, ans) : null;
+  const payload = {
+    timestamp: new Date().toISOString(),
+    name, contact,
+    stone: stone ? stone.displayName : '',
+    vedicName: stone ? stone.vedicName : '',
+    planet: stone ? stone.planet : '',
+    efficacyPercent: result ? result.efficacyPercent : '',
+    verdict: result ? result.verdict.label : '',
+    origin: ans.origin?.optionId || '',
+    treatment: ans.treatment?.optionId || '',
+    light_transmission: ans.light_transmission?.optionId || '',
+    luster: ans.luster?.optionId || '',
+    carat: ans.carat?.optionId || '',
+    certification: ans.certification?.optionId || '',
+    metal: ans.metal?.optionId || '',
+    finger: ans.finger?.optionId || '',
+    energising: ans.energising?.optionId || '',
+    pageUrl: location.href,
+  };
+  try {
+    fetch(LEAD_ENDPOINT, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload),
+      keepalive: true,
+    }).catch(() => {});
+  } catch (_) { /* logging must never break the form */ }
 }
 
 function wireLead() {
@@ -363,6 +407,7 @@ function wireLead() {
       return;
     }
     track('lead_submit', { hasContact: !!contact });
+    saveLeadToSheet(name, contact);
     state.leadSubmitted = true;
     persist();
     render();

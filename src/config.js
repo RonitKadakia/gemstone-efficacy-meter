@@ -62,7 +62,7 @@ export const VERDICTS = [
 export const FACTOR_NAMES = {
   origin: 'Origin', treatment: 'Treatment', carat: 'Carat weight', certification: 'Certification',
   light_transmission: 'Light transmission', luster: 'Luster',
-  metal: 'Metal setting', finger: 'Where worn', energising: 'Energising ritual',
+  metal: 'Metal setting', finger: 'Where it’s worn', energising: 'Energising ritual',
 };
 
 /* =========================================================================
@@ -154,13 +154,13 @@ export const QUESTIONS = [
     title: 'What is the carat weight of your stone?',
     hint: 'Mass determines the volume of planetary energy the stone can hold. Below a minimum threshold there isn’t enough to register a measurable influence.',
     options: [
-      { id: 'under2', label: 'Under 2 carats', subLabel: 'Below minimum threshold', points: 0,
+      { id: 'under2', label: 'Below minimum threshold', subLabel: 'Under 2 carats', points: 0,
         gap: 'Under 2 carats - below the minimum mass needed to hold a measurable volume of planetary energy.' },
-      { id: '2to4',   label: '2–4 carats',     subLabel: 'Acceptable range',        points: 8,
+      { id: '2to4',   label: 'Acceptable range',     subLabel: '2–4 carats',        points: 8,
         gap: '2–4 carats is acceptable, but greater mass would hold and channel more planetary energy.' },
-      { id: '4to6',   label: '4–6 carats',     subLabel: 'Strong efficacy range',   points: 12,
+      { id: '4to6',   label: 'Strong efficacy range',     subLabel: '4–6 carats',   points: 12,
         gap: '4–6 carats is a strong range - just short of the optimal mass for this stone.' },
-      { id: '6plus',  label: '6+ carats',      subLabel: 'Optimal',                 points: 15 },
+      { id: '6plus',  label: 'Optimal',      subLabel: '6+ carats',                 points: 15 },
       { id: 'dontknow', label: 'Don’t know',   subLabel: 'Not sure of the weight',  points: 3,
         gap: 'The carat weight is unknown - without it there’s no way to confirm the stone has the mass needed to hold planetary energy.' },
     ],
